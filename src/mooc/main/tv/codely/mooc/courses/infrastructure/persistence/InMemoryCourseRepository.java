@@ -5,7 +5,10 @@ import tv.codely.mooc.courses.domain.CourseId;
 import tv.codely.mooc.courses.domain.CourseRepository;
 import tv.codely.shared.domain.criteria.Criteria;
 
-import java.util.ArrayList;
+import tv.codely.shared.domain.criteria.Filter;
+
+import java.util.stream.Collectors;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +27,13 @@ public final class InMemoryCourseRepository implements CourseRepository {
 
     @Override
     public List<Course> matching(Criteria criteria) {
-        return new ArrayList<>(courses.values());
+        return courses.values()
+                      .stream()
+                      .filter(course -> criteria.filters().filters().stream().allMatch(filter -> matches(course, filter)))
+                      .collect(Collectors.toList());
+    }
+
+    private boolean matches(Course course, Filter filter) {
+        return course.name().value().equals(filter.value().value());
     }
 }
