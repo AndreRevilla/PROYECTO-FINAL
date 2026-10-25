@@ -60,9 +60,7 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
 
     @Test
     void return_an_empty_list_when_matching_with_no_saved_courses() {
-        Criteria criteria = new Criteria(Filters.none(), Order.none());
-
-        assertEquals(List.of(), inMemoryCourseRepository.matching(criteria));
+        assertEquals(List.of(), inMemoryCourseRepository.matching(criteriaWithoutFilters()));
     }
 
     @Test
@@ -71,9 +69,8 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
         Course second = CourseMother.random();
         inMemoryCourseRepository.save(first);
         inMemoryCourseRepository.save(second);
-        Criteria criteria = new Criteria(Filters.none(), Order.none());
 
-        List<Course> result = inMemoryCourseRepository.matching(criteria);
+        List<Course> result = inMemoryCourseRepository.matching(criteriaWithoutFilters());
 
         assertEquals(2, result.size());
         assertTrue(result.containsAll(List.of(first, second)));
@@ -81,23 +78,25 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
 
     @Test
     void return_only_the_courses_matching_a_name_filter() {
-        Course ddd = CourseMother.create(
-            CourseIdMother.random(),
-            CourseNameMother.create("DDD en Java"),
-            CourseDurationMother.random()
-        );
-        Course testing = CourseMother.create(
-            CourseIdMother.random(),
-            CourseNameMother.create("Testing en Java"),
-            CourseDurationMother.random()
-        );
+        Course ddd     = courseNamed("DDD en Java");
+        Course testing = courseNamed("Testing en Java");
         inMemoryCourseRepository.save(ddd);
         inMemoryCourseRepository.save(testing);
-        Criteria criteria = new Criteria(
-            new Filters(List.of(Filter.create("name", "=", "DDD en Java"))),
-            Order.none()
-        );
 
-        assertEquals(List.of(ddd), inMemoryCourseRepository.matching(criteria));
+        List<Course> result = inMemoryCourseRepository.matching(criteriaFilteringByName("DDD en Java"));
+
+        assertEquals(List.of(ddd), result);
+    }
+
+    private Criteria criteriaWithoutFilters() {
+        return new Criteria(Filters.none(), Order.none());
+    }
+
+    private Criteria criteriaFilteringByName(String name) {
+        return new Criteria(new Filters(List.of(Filter.create("name", "=", name))), Order.none());
+    }
+
+    private Course courseNamed(String name) {
+        return CourseMother.create(CourseIdMother.random(), CourseNameMother.create(name), CourseDurationMother.random());
     }
 }
