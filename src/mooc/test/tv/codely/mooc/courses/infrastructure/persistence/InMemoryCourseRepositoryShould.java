@@ -11,6 +11,7 @@ import tv.codely.mooc.courses.domain.CourseNameMother;
 import tv.codely.shared.domain.criteria.Criteria;
 import tv.codely.shared.domain.criteria.Filters;
 import tv.codely.shared.domain.criteria.Order;
+import tv.codely.shared.domain.criteria.Filter;
 
 import java.util.List;
 
@@ -56,7 +57,7 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
 
         assertEquals(Optional.of(updated), inMemoryCourseRepository.search(id));
     }
-    
+
     @Test
     void return_an_empty_list_when_matching_with_no_saved_courses() {
         Criteria criteria = new Criteria(Filters.none(), Order.none());
@@ -76,5 +77,27 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
 
         assertEquals(2, result.size());
         assertTrue(result.containsAll(List.of(first, second)));
+    }
+
+    @Test
+    void return_only_the_courses_matching_a_name_filter() {
+        Course ddd = CourseMother.create(
+            CourseIdMother.random(),
+            CourseNameMother.create("DDD en Java"),
+            CourseDurationMother.random()
+        );
+        Course testing = CourseMother.create(
+            CourseIdMother.random(),
+            CourseNameMother.create("Testing en Java"),
+            CourseDurationMother.random()
+        );
+        inMemoryCourseRepository.save(ddd);
+        inMemoryCourseRepository.save(testing);
+        Criteria criteria = new Criteria(
+            new Filters(List.of(Filter.create("name", "=", "DDD en Java"))),
+            Order.none()
+        );
+
+        assertEquals(List.of(ddd), inMemoryCourseRepository.matching(criteria));
     }
 }
