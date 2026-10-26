@@ -1,2 +1,25 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+}
+
 dependencies {
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+}
+
+test {
+    finalizedBy jacocoTestReport
 }
