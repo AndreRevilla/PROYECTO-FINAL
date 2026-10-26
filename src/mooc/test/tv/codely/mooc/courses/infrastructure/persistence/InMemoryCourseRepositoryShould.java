@@ -1,28 +1,25 @@
-package tv.codely.mooc.courses.infrastructure.persistence;
-
 import org.junit.jupiter.api.Test;
 import tv.codely.mooc.courses.CoursesModuleInfrastructureTestCase;
 import tv.codely.mooc.courses.domain.Course;
+import tv.codely.mooc.courses.domain.CourseDuration;
+import tv.codely.mooc.courses.domain.CourseDurationMother;
+import tv.codely.mooc.courses.domain.CourseId;
 import tv.codely.mooc.courses.domain.CourseIdMother;
 import tv.codely.mooc.courses.domain.CourseMother;
 import tv.codely.mooc.courses.domain.CourseName;
-import tv.codely.mooc.courses.domain.CourseDuration;
-import tv.codely.mooc.courses.domain.CourseId;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
+import tv.codely.mooc.courses.domain.CourseNameMother;
 import tv.codely.shared.domain.criteria.Criteria;
+import tv.codely.shared.domain.criteria.Filter;
 import tv.codely.shared.domain.criteria.Filters;
 import tv.codely.shared.domain.criteria.Order;
-import tv.codely.shared.domain.criteria.Filter;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTestCase {
     @Test
@@ -643,5 +640,59 @@ final class InMemoryCourseRepositoryShould extends CoursesModuleInfrastructureTe
         // Assert
         assertEquals(first, courses.get(0));
         assertEquals(second, courses.get(1));
+    }
+
+    @Test
+    void overwrite_a_course_when_saving_it_with_an_existing_id() {
+        CourseId id = CourseIdMother.random();
+        Course original = CourseMother.create(id, CourseNameMother.random(), CourseDurationMother.random());
+        Course updated = CourseMother.create(id, CourseNameMother.random(), CourseDurationMother.random());
+
+        inMemoryCourseRepository.save(original);
+        inMemoryCourseRepository.save(updated);
+
+        assertEquals(Optional.of(updated), inMemoryCourseRepository.search(id));
+    }
+
+    @Test
+    void return_an_empty_list_when_matching_with_no_saved_courses() {
+        assertEquals(List.of(), inMemoryCourseRepository.matching(criteriaWithoutFilters()));
+    }
+
+    @Test
+    void return_all_saved_courses_when_matching_without_filters() {
+        Course first  = CourseMother.random();
+        Course second = CourseMother.random();
+        inMemoryCourseRepository.save(first);
+        inMemoryCourseRepository.save(second);
+
+        List<Course> result = inMemoryCourseRepository.matching(criteriaWithoutFilters());
+
+        assertEquals(2, result.size());
+        assertTrue(result.containsAll(List.of(first, second)));
+    }
+
+    @Test
+    void return_only_the_courses_matching_a_name_filter() {
+        Course ddd     = courseNamed("DDD en Java");
+        Course testing = courseNamed("Testing en Java");
+        inMemoryCourseRepository.save(ddd);
+        inMemoryCourseRepository.save(testing);
+
+        List<Course> result = inMemoryCourseRepository.matching(criteriaFilteringByName("DDD en Java"));
+
+        assertEquals(List.of(ddd), result);
+    }
+
+    private Criteria criteriaWithoutFilters() {
+        return new Criteria(Filters.none(), Order.none());
+    }
+
+    private Criteria criteriaFilteringByName(String name) {
+        return new Criteria(new Filters(List.of(Filter.create("name", "=", name))), Order.none());
+    }
+
+    private Course courseNamed(String name) {
+        return CourseMother.create(CourseIdMother.random(), CourseNameMother.create(name), CourseDurationMother.random());
     }
 }

@@ -5,6 +5,10 @@ import tv.codely.mooc.courses.domain.CourseId;
 import tv.codely.mooc.courses.domain.CourseRepository;
 import tv.codely.shared.domain.criteria.Criteria;
 
+import tv.codely.shared.domain.criteria.Filter;
+
+import java.util.stream.Collectors;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
