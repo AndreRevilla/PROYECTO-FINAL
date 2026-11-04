@@ -30,22 +30,37 @@ public final class ApiExceptionMiddleware implements Filter {
         ServletResponse response,
         FilterChain chain
     ) throws ServletException {
-        HttpServletRequest  httpRequest  = ((HttpServletRequest) request);
-        HttpServletResponse httpResponse = ((HttpServletResponse) response);
+
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         try {
-            Object possibleController = (
-                (HandlerMethod) Objects.requireNonNull(
-                    mapping.getHandler(httpRequest)).getHandler()
-            ).getBean();
+            var handler = mapping.getHandler(httpRequest);
+
+            // Si no existe un HandlerMethod, continuar normalmente.
+            if (handler == null || !(handler.getHandler() instanceof HandlerMethod)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            Object possibleController =
+                ((HandlerMethod) handler.getHandler()).getBean();
 
             try {
                 chain.doFilter(request, response);
             } catch (Exception exception) {
                 if (possibleController instanceof ApiController) {
-                    handleCustomError(response, httpResponse, (ApiController) possibleController, exception);
+                    handleCustomError(
+                        response,
+                        httpResponse,
+                        (ApiController) possibleController,
+                        exception
+                    );
+                } else {
+                    throw exception;
                 }
             }
+
         } catch (Exception e) {
             throw new ServletException(e);
         }
