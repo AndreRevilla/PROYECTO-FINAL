@@ -17,8 +17,11 @@ import tv.codely.mooc.enrollments.domain.StudentNotExist;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.ArgumentCaptor;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -58,7 +61,13 @@ final class EnrollStudentShould {
 
         enrollStudent.enroll(ENROLLMENT_ID, STUDENT_ID, courseId);
 
-        verify(enrollmentRepository, times(1)).save(any(Enrollment.class));
+        ArgumentCaptor<Enrollment> enrollmentCaptor = ArgumentCaptor.forClass(Enrollment.class);
+        verify(enrollmentRepository, times(1)).save(enrollmentCaptor.capture());
+
+        Enrollment savedEnrollment = enrollmentCaptor.getValue();
+        assertEquals(ENROLLMENT_ID, savedEnrollment.id());
+        assertEquals(STUDENT_ID, savedEnrollment.studentId());
+        assertEquals(courseId, savedEnrollment.courseId());
     }
 
     @Test
