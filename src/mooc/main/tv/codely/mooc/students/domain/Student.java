@@ -1,16 +1,25 @@
 package tv.codely.mooc.students.domain;
 
 public final class Student {
+
     private final StudentId id;
-    private final String    name;
-    private final String    surname;
-    private final String    email;
+    private final String name;
+    private final String surname;
+    private final String email;
 
     public Student(StudentId id, String name, String surname, String email) {
-        this.id      = id;
-        this.name    = name;
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Student name cannot be empty");
+        }
+
+        if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("Student email is invalid");
+        }
+
+        this.id = id;
+        this.name = name;
         this.surname = surname;
-        this.email   = email;
+        this.email = email;
     }
 
     public StudentId id() {
